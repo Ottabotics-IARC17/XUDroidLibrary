@@ -1,16 +1,7 @@
 #include "Serial.h"
 
 
-class Serial {
-  private:
-    char* dev_desc;
-    struct termios tty;
-    struct termios tty_old;
-    int USB;
-}
-
 Serial::Serial(char* device_descriptor){
-  dev_desc = device_descriptor;
   memset (&tty, 0, sizeof tty);
 
   if ( tcgetattr ( USB, &tty ) != 0 ) {
@@ -18,24 +9,24 @@ Serial::Serial(char* device_descriptor){
   }
 }
 
-Serial::open(){
+void Serial::open_connection(){
   USB = open(dev_desc, O_RDWR| O_NOCTTY);
 }
 
-Serial::set_baud(unsigned int baud){
-  cfsetospeed(baud);
-  cfsetispeed(baud);
+void Serial::set_baud(termios* tty, unsigned int baud){
+  cfsetospeed(tty, baud);
+  cfsetispeed(tty, baud);
 }
 
-Serial::addflag(int flag) {
+void Serial::add_flag(int flag) {
   tty.c_cflag &= ~flag;
 }
 
-Serial::maskflag() {
+void Serial::mask_flag() {
   tty.c_cflag |=  CS8;
 }
 
-Serial::set_blocking(bool enabled) {
+void Serial::set_blocking(bool enabled) {
   if(enabled) {
     tty.c_cc[VMIN] = 1;
   } else {
@@ -43,11 +34,7 @@ Serial::set_blocking(bool enabled) {
   }
 }
 
-Serial::make_raw(struct in_struct) {
-  cfmakeraw(&in_struct);
-}
-
-Serial::write(char* cmd) {
+void Serial::write_cmd(char cmd[]) {
   int n_written = 0,
     spot = 0;
   do {
